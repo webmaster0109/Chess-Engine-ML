@@ -120,18 +120,32 @@ def predict_piece(square_image):
 
 def squares_to_fen(squares):
     board = []
-    for y in range(8):
-        row = []
-        for x in range(8):
-            piece = predict_piece(squares[y * 8 + x])
-            row.append(piece if piece else '1')
-        board.append(''.join(row))
+    for i, square in enumerate(squares):
+        row, col = divmod(i, 8)
+        piece = predict_piece(square)
+        board[row].append(piece if piece else '1') if col == 0 else None
     
     # Merge empty squares and format to FEN
+    # for i in range(len(board)):
+    #     board[i] = ''.join([str(len(list(g))) if k == '1' else k for k, g in groupby(board[i])])
     for i in range(len(board)):
-        board[i] = ''.join([str(len(list(g))) if k == '1' else k for k, g in groupby(board[i])])
+        merged_row = ''
+        count = 0
+        for char in board[i]:
+            if char == '1':
+                count += 1
+            else:
+                if count > 0:
+                    merged_row += str(count)
+                    count = 0
+                merged_row += char
+        if count > 0:
+            merged_row += str(count)
+        board[i] = merged_row
     
-    fen = '/'.join(board) + ' w KQkq - 0 1'
+    board_state = chess.Board()
+    board_state.set_fen('/'.join(board))
+    fen = board_state.fen()
     return fen
 
 def suggest_move(board_state, player_color):
